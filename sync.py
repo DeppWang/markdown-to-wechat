@@ -43,7 +43,6 @@ def init_cache():
 
 
 class NewClient:
-
     def __init__(self):
         self.__accessToken = ''
         self.__leftTime = 0
@@ -115,7 +114,7 @@ def upload_image_from_path(image_path):
 
 def upload_image(img_url):
     """
-    * 上传临时素菜
+    * 上传临时素材
     * 1、临时素材media_id是可复用的。
     * 2、媒体文件在微信后台保存时间为3天，即3天后media_id失效。
     * 3、上传临时素材的格式、大小限制与公众平台官网一致。
@@ -164,7 +163,7 @@ def render_markdown(content):
             ), ]
     post = "".join(content.split("---\n")[2:])
     html = markdown.markdown(post, extensions=exts)
-    open("origi.html", "w").write(html)
+    open("origin.html", "w").write(html)
     return css_beautify(html)
 
 
@@ -207,7 +206,7 @@ def replace_header(content):
 
 
 def replace_links(content):
-    pq = PyQuery(open('origi.html').read())
+    pq = PyQuery(open('origin.html').read())
     links = pq('a')
     refs = []
     index = 1
@@ -234,7 +233,7 @@ def replace_links(content):
 
 
 def fix_image(content):
-    pq = PyQuery(open('origi.html').read())
+    pq = PyQuery(open('origin.html').read())
     imgs = pq('img')
     for line in imgs.items():
         link = """<img alt="{}" src="{}" />""".format(line.attr('alt'), line.attr('src'))
@@ -292,7 +291,7 @@ def upload_media_news(post_path):
     THUMB_MEDIA_ID = (len(images) > 0 and uploaded_images[images[0]][0]) or ''
     AUTHOR = 'DeppWang'
     RESULT = render_markdown(content)
-    
+
     digest = fetch_attr(content, 'subtitle').strip().strip('"').strip('\'')
     print('digest', digest)
     print(fetch_attr(content, 'date')[:10])
