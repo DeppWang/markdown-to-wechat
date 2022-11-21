@@ -185,6 +185,15 @@ def replace_para(content):
     return "\n".join(res)
 
 
+def replace_code(content):
+    res = []
+    for line in content.split("\n"):
+        if line.startswith("<code>"):
+            line = line.replace("<code>", gen_css("code"))
+        res.append(line)
+    return "\n".join(res)
+
+
 def gen_css(path, *args):
     tmpl = open("./assets/{}.tmpl".format(path), "r").read()
     return tmpl.format(*args)
@@ -255,6 +264,7 @@ def format_fix(content):
 
 def css_beautify(content):
     content = replace_para(content)
+    content = replace_code(content)
     content = replace_header(content)
     content = replace_links(content)
     content = format_fix(content)
