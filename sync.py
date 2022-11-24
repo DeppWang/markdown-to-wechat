@@ -364,7 +364,7 @@ def run(string_date):
 if __name__ == '__main__':
     init_cache()
     start_time = time.time()  # 开始时间
-    times = [datetime.now(), datetime.now() - timedelta(days=23)]
+    times = [datetime.now(), datetime.now() - timedelta(days=1)]
     for x in times:
         print("start time: {}".format(x.strftime("%m/%d/%Y, %H:%M:%S")))
         string_date = x.strftime('%Y-%m-%d')
