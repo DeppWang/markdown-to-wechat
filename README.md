@@ -5,6 +5,8 @@
 ## 安装
 
 ```bash
+python3 -m venv venv
+. venv/bin/activate
 pip3 install markdown Pygments werobot pyquery
 ```
 
