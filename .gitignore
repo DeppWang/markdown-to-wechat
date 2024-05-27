@@ -8,3 +8,5 @@ cache.bin
 ob
 ob-pub
 node_modules
+.history
+venv

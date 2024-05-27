@@ -23,3 +23,9 @@ robot.config["APP_SECRET"] = os.getenv('WECHAT_APP_SECRET')
 
 把 token 配置到服务器环境变量，然后在服务器上运行 `python3 sync.py` 即可。
 
+## 问题
+
+1. 公众号文章与个人博客内容不相同，video，youtube 与 bilibili。需要手动编辑；需要预览与发送。
+2. mdnice 粘贴也要不了多少时间，也支持图片
+3. 缺点：电脑 IP 经常变动；支持性不佳，字体，代码；pull 代码基于 html，有等待时间；
+4. 好处：标题、原文链接

@@ -7,6 +7,7 @@
 # from calendar import c
 from datetime import datetime
 from datetime import timedelta
+import subprocess
 # from weakref import ref
 from pyquery import PyQuery
 import time
@@ -26,7 +27,6 @@ CACHE = {}
 
 CACHE_STORE = "cache.bin"
 
-
 def dump_cache():
     fp = open(CACHE_STORE, "wb")
     pickle.dump(CACHE, fp)
@@ -41,6 +41,21 @@ def init_cache():
         return
     dump_cache()
 
+def pull_code():
+    # 定义 git pull 命令
+    command = ['git', 'pull', 'origin', 'master']
+    # 指定工作目录
+    working_dir = '/Users/depp/GitHub/HexoBlog/'
+    # 执行命令
+    result = subprocess.run(command, capture_output=True, text=True, cwd=working_dir)
+    if result.returncode == 0:
+        print("Git pull 成功")
+        print(result.stdout)  # 输出命令执行的标准输出
+        return True
+    else:
+        print("Git pull 失败")
+        print(result.stderr)  # 输出命令执行的错误信息
+        return False
 
 class NewClient:
     def __init__(self):
@@ -103,6 +118,7 @@ def upload_image_from_path(image_path):
     if res != None:
         return res[0], res[1]
     client, _ = Client()
+    print('上传: {}'.format(image_path))
     media_json = client.upload_permanent_media("image", open(image_path, "rb"))  # 永久素材
     media_id = media_json['media_id']
     media_url = media_json['url']
@@ -285,7 +301,7 @@ def upload_media_news(post_path):
     if len(images) == 0 or gen_cover == "true":
         images = ['https://source.unsplash.com/random/600x400'] + images
     uploaded_images = {}
-    print(images)
+    # print(images)
     for image in images:
         media_id = ''
         media_url = ''
@@ -305,9 +321,13 @@ def upload_media_news(post_path):
     digest = fetch_attr(content, 'subtitle').strip().strip('"').strip('\'')
     print('digest', digest)
     print(fetch_attr(content, 'date')[:10])
-    date = datetime.strptime(fetch_attr(content, 'date')[:10], '%Y-%m-%d').strftime('%Y/%m/%d')
+    date = datetime.strptime(fetch_attr(content, 'date')[:10], '%Y-%m-%d')
+    if date > datetime.strptime('2024-4-5', '%Y-%m-%d'):
+        date_str = str(date.year)
+    else:
+        date_str = date.strftime('%Y/%m/%d')
     english_title = fetch_attr(content, 'english_title').strip()
-    CONTENT_SOURCE_URL = 'https://depp.wang/{}/{}'.format(date, english_title)
+    CONTENT_SOURCE_URL = 'https://depp.wang/{}/{}'.format(date_str, english_title)
 
     articles = {
         'articles':
@@ -344,6 +364,7 @@ def upload_media_news(post_path):
 
 
 def run(string_date):
+    pull_code()
     pathlist = Path("../HexoBlog/source/_posts").glob('**/*.md')
     for path in pathlist:
         # print('path', path)
@@ -364,7 +385,7 @@ def run(string_date):
 if __name__ == '__main__':
     init_cache()
     start_time = time.time()  # 开始时间
-    times = [datetime.now(), datetime.now() - timedelta(days=1)]
+    times = [datetime.now(), datetime.now() - timedelta(days=3)]
     for x in times:
         print("start time: {}".format(x.strftime("%m/%d/%Y, %H:%M:%S")))
         string_date = x.strftime('%Y-%m-%d')
