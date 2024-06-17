@@ -25,7 +25,11 @@ robot.config["APP_SECRET"] = os.getenv('WECHAT_APP_SECRET')
 
 ## 问题
 
-1. 公众号文章与个人博客内容不相同，video，youtube 与 bilibili。需要手动编辑；需要预览与发送。
+1. 公众号文章与个人博客内容可能不相同，如：video，youtube 与 bilibili，还是需要手动编辑；还是需要预览与发送。
 2. mdnice 粘贴也要不了多少时间，也支持图片
-3. 缺点：电脑 IP 经常变动；支持性不佳，字体，代码；pull 代码基于 html，有等待时间；
-4. 好处：标题、原文链接
+3. 缺点：支持性不佳，代码块、有序列表、无序列表；本地执行-电脑 IP 经常变动（服务器运行可解决这个问题）；预览后的修改不能直接替换（可实现）；
+4. 好处：标题、原文链接、头图
+
+## Obsidian to Wechat
+
+obsidian_to_wechat.py: 从 obsidian 发布到微信公众号
