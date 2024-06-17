@@ -143,9 +143,9 @@ def obsidian_to_wechat(string_date):
             continue
         if os.path.isdir(file_path):
             continue
-        # if file_processed(file_path):
-        #     print("{} has been processed".format(file_path))
-        #     continue
+        if file_processed(file_path):
+            print("{} has been processed".format(file_path))
+            continue
         exec(file_name, file_path)
 
 
