@@ -10,3 +10,5 @@ ob-pub
 node_modules
 .history
 venv
+dump.rdb
+__pycache__
