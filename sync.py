@@ -13,6 +13,7 @@ import subprocess
 from pyquery import PyQuery
 import time
 import urllib
+import urllib.parse
 import markdown
 from markdown.extensions import codehilite
 import os
@@ -250,9 +251,12 @@ def upload_image(img_url):
     * 3、上传临时素材的格式、大小限制与公众平台官网一致。
     """
     resource = urllib.request.urlopen(img_url)
-    name = img_url.split("/")[-1]
+    parsed = urllib.parse.urlparse(img_url)
+    name = os.path.basename(parsed.path)
+    if not name:
+        name = hashlib.md5(img_url.encode("utf-8")).hexdigest()
     f_name = "/tmp/{}".format(name)
-    if "." not in f_name:
+    if "." not in name:
         f_name = f_name + ".png"
     with open(f_name, "wb") as f:
         f.write(resource.read())

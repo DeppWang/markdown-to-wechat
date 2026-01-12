@@ -21,7 +21,11 @@ robot.config["APP_ID"] = os.getenv('WECHAT_APP_ID')
 robot.config["APP_SECRET"] = os.getenv('WECHAT_APP_SECRET')
 ```
 
-把 token 配置到服务器环境变量，然后在服务器上运行 `python3 sync.py` 即可。
+把 token 配置到服务器环境变量，然后在服务器上运行：
+
+```shell
+python3 obsidian_to_wechat.py
+```
 
 ## 问题
 
