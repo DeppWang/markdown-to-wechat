@@ -19,7 +19,7 @@ from sync import (
     upload_image,
 )
 
-OBSIDIAN_PATH = "/Users/depp/Documents/Obsidian"
+OBSIDIAN_PATH = "/Users/depp/Obsidian/Articles"
 OBSIDIAN_TO_WECHAT_TAG = "Obsidian-to-Wechat-Tag"
 
 
@@ -126,7 +126,7 @@ def exec(file_name, file_path):
     # 如果没有 Obsidian-to-HexoBlog-Tag 标签
     if OBSIDIAN_TO_WECHAT_TAG not in tags:
         return
-    # print('has tag', file_path)
+    print('has tag', file_path)
     english_title = tags[0]  # 第一个标签为英文名
 
     upload_media_news(file_name, file_path, english_title)
