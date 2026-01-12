@@ -72,7 +72,7 @@ def upload_media_news(file_name, file_path, english_title):
     digest = fetch_attr(content, "subtitle").strip().strip('"').strip("'")
     print("digest", digest)
     print(fetch_attr(content, "date")[:10])
-    CONTENT_SOURCE_URL = "https://depp.wang/2024/{}".format(english_title)
+    CONTENT_SOURCE_URL = "https://depp.wang/2026/{}".format(english_title)
 
     articles = {
         "articles": [
