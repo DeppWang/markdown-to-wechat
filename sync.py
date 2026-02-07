@@ -250,16 +250,17 @@ def upload_image(img_url):
     * 2、媒体文件在微信后台保存时间为3天，即3天后media_id失效。
     * 3、上传临时素材的格式、大小限制与公众平台官网一致。
     """
-    resource = urllib.request.urlopen(img_url)
+    resp = requests.get(img_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+    resp.raise_for_status()
     parsed = urllib.parse.urlparse(img_url)
     name = os.path.basename(parsed.path)
     if not name:
         name = hashlib.md5(img_url.encode("utf-8")).hexdigest()
-    f_name = "/tmp/{}".format(name)
+    f_name = "tmp/{}".format(name)
     if "." not in name:
         f_name = f_name + ".png"
     with open(f_name, "wb") as f:
-        f.write(resource.read())
+        f.write(resp.content)
     return upload_image_from_path(f_name)
 
 

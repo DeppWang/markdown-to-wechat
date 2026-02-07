@@ -13,3 +13,4 @@ venv
 dump.rdb
 __pycache__
 .idea
+tmp

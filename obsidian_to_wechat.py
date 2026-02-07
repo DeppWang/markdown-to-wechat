@@ -152,10 +152,11 @@ def obsidian_to_wechat(string_date):
 if __name__ == "__main__":
     init_cache()
     start_time = time.time()  # 开始时间
-    times = [datetime.now(), datetime.now() - timedelta(days=3)]
+    print("start time: {}".format(datetime.now().strftime("%m/%d/%Y, %H:%M:%S")))
+    times = [datetime.now() - timedelta(days=i) for i in range(3, -1, -1)]
     for x in times:
-        print("start time: {}".format(x.strftime("%m/%d/%Y, %H:%M:%S")))
         string_date = x.strftime("%Y-%m-%d")
+        print("day: {}".format(string_date))
         obsidian_to_wechat(string_date)
     end_time = time.time()  # 结束时间
     print("程序耗时%f秒." % (end_time - start_time))
