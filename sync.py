@@ -76,6 +76,19 @@ def file_processed(file_path):
     return cache_get(digest) != None
 
 
+def get_draft_media_id(file_path):
+    """通过文件路径获取之前上传的草稿 media_id"""
+    return cache_get("draft:{}".format(file_path))
+
+
+def cache_update_with_draft(file_path, draft_media_id):
+    """同时保存文件 MD5 和草稿 media_id 的映射"""
+    digest = file_digest(file_path)
+    CACHE[digest] = "{}:{}".format(file_path, datetime.now())
+    CACHE["draft:{}".format(file_path)] = draft_media_id
+    dump_cache()
+
+
 def pull_code():
     # 定义 git pull 命令
     command = ["git", "pull", "origin", "master"]
@@ -345,6 +358,23 @@ def update_images_urls(content, uploaded_images):
     return content
 
 
+def update_draft(draft_media_id, article):
+    """更新已有草稿"""
+    client = NewClient()
+    token = client.get_access_token()
+    headers = {"Content-type": "text/plain; charset=utf-8"}
+    body = {"media_id": draft_media_id, "index": 0, "articles": article}
+    datas = json.dumps(body, ensure_ascii=False).encode("utf-8")
+    post_url = "https://api.weixin.qq.com/cgi-bin/draft/update?access_token=%s" % token
+    r = requests.post(post_url, data=datas, headers=headers)
+    resp = json.loads(r.text)
+    print(resp)
+    if resp.get("errcode", 0) != 0:
+        print("Failed to update draft: {}".format(resp.get("errmsg", "")))
+        return None
+    return resp
+
+
 def upload_media_news(post_path):
     """
     上传到微信公众号素材
@@ -406,6 +436,17 @@ def upload_media_news(post_path):
     fp.write(RESULT)
     fp.close()
 
+    existing_draft_id = get_draft_media_id(post_path)
+    if existing_draft_id:
+        print("Updating existing draft (media_id: {})".format(existing_draft_id))
+        article = articles["articles"][0]
+        resp = update_draft(existing_draft_id, article)
+        if resp is not None:
+            cache_update_with_draft(post_path, existing_draft_id)
+            return resp
+        else:
+            print("Update failed, creating new draft instead")
+
     client = NewClient()
     token = client.get_access_token()
     headers = {"Content-type": "text/plain; charset=utf-8"}
@@ -415,8 +456,8 @@ def upload_media_news(post_path):
     r = requests.post(postUrl, data=datas, headers=headers)
     resp = json.loads(r.text)
     print(resp)
-    media_id = resp["media_id"]
-    cache_update(post_path)
+    draft_media_id = resp["media_id"]
+    cache_update_with_draft(post_path, draft_media_id)
     return resp
 
 

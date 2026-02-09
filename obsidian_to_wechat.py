@@ -10,11 +10,14 @@ import requests
 from sync import (
     NewClient,
     cache_update,
+    cache_update_with_draft,
     fetch_attr,
     file_processed,
+    get_draft_media_id,
     get_images_from_markdown,
     init_cache,
     render_markdown,
+    update_draft,
     update_images_urls,
     upload_image,
 )
@@ -95,6 +98,17 @@ def upload_media_news(file_name, file_path, english_title):
     fp.write(RESULT)
     fp.close()
 
+    existing_draft_id = get_draft_media_id(file_path)
+    if existing_draft_id:
+        print("Updating existing draft (media_id: {})".format(existing_draft_id))
+        article = articles["articles"][0]
+        resp = update_draft(existing_draft_id, article)
+        if resp is not None:
+            cache_update_with_draft(file_path, existing_draft_id)
+            return resp
+        else:
+            print("Update failed, creating new draft instead")
+
     client = NewClient()
     token = client.get_access_token()
     headers = {"Content-type": "text/plain; charset=utf-8"}
@@ -104,8 +118,8 @@ def upload_media_news(file_name, file_path, english_title):
     r = requests.post(postUrl, data=datas, headers=headers)
     resp = json.loads(r.text)
     print(resp)
-    media_id = resp["media_id"]
-    cache_update(file_path)
+    draft_media_id = resp["media_id"]
+    cache_update_with_draft(file_path, draft_media_id)
     return resp
 
 
