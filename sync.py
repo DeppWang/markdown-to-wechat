@@ -1,18 +1,12 @@
 #!/usr/bin/python3
-# public/upload_news.py
 # -*- coding: utf-8 -*-
 """
 推送文章到微信公众号
 """
-# from calendar import c
 from datetime import datetime
-from datetime import timedelta
 import re
-import subprocess
 
-# from weakref import ref
 from pyquery import PyQuery
-import time
 import urllib
 import urllib.parse
 import markdown
@@ -20,7 +14,6 @@ from markdown.extensions import codehilite
 import os
 import hashlib
 import pickle
-from pathlib import Path
 from werobot import WeRoBot
 import requests
 import json
@@ -29,9 +22,6 @@ import urllib.request
 CACHE = {}
 
 CACHE_STORE = "cache.bin"
-BLOG_URL = "https://depp.wang"
-AUTHOR = "DeppWang"
-HEXO_BLOG_POST_PATH = "../HexoBlog/source/_posts"
 
 
 def dump_cache():
@@ -65,12 +55,6 @@ def file_digest(file_path):
     return md5.hexdigest()
 
 
-def cache_update(file_path):
-    digest = file_digest(file_path)
-    CACHE[digest] = "{}:{}".format(file_path, datetime.now())
-    dump_cache()
-
-
 def file_processed(file_path):
     digest = file_digest(file_path)
     return cache_get(digest) != None
@@ -87,23 +71,6 @@ def cache_update_with_draft(file_path, draft_media_id):
     CACHE[digest] = "{}:{}".format(file_path, datetime.now())
     CACHE["draft:{}".format(file_path)] = draft_media_id
     dump_cache()
-
-
-def pull_code():
-    # 定义 git pull 命令
-    command = ["git", "pull", "origin", "master"]
-    # 指定工作目录
-    working_dir = "/Users/depp/GitHub/HexoBlog/"
-    # 执行命令
-    result = subprocess.run(command, capture_output=True, text=True, cwd=working_dir)
-    if result.returncode == 0:
-        print("Git pull 成功")
-        print(result.stdout)  # 输出命令执行的标准输出
-        return True
-    else:
-        print("Git pull 失败")
-        print(result.stderr)  # 输出命令执行的错误信息
-        return False
 
 
 class NewClient:
@@ -375,118 +342,3 @@ def update_draft(draft_media_id, article):
     return resp
 
 
-def upload_media_news(post_path):
-    """
-    上传到微信公众号素材
-    """
-    content = open(post_path, "r").read()
-    TITLE = fetch_attr(content, "title").strip('"').strip("'")
-    gen_cover = fetch_attr(content, "gen_cover").strip('"')
-    images = get_images_from_markdown(content)
-    print("TITLE", TITLE)
-    if len(images) == 0 or gen_cover == "true":
-        images = ["https://source.unsplash.com/random/600x400"] + images
-    uploaded_images = {}
-    # print(images)
-    for image in images:
-        media_id = ""
-        media_url = ""
-        if image.startswith("http"):
-            media_id, media_url = upload_image(image)
-            # print('image')
-        else:
-            media_id, media_url = upload_image_from_path("../HexoBlog/source" + image)
-        uploaded_images[image] = [media_id, media_url]
-
-    content = update_images_urls(content, uploaded_images)
-
-    THUMB_MEDIA_ID = (len(images) > 0 and uploaded_images[images[0]][0]) or ""
-
-    RESULT = render_markdown("".join(content.split("---\n")[2:]))
-
-    digest = fetch_attr(content, "subtitle").strip().strip('"').strip("'")
-    print("digest", digest)
-    print(fetch_attr(content, "date")[:10])
-    date = datetime.strptime(fetch_attr(content, "date")[:10], "%Y-%m-%d")
-    if date > datetime.strptime("2024-4-5", "%Y-%m-%d"):
-        date_str = str(date.year)
-    else:
-        date_str = date.strftime("%Y/%m/%d")
-    english_title = fetch_attr(content, "english_title").strip()
-    CONTENT_SOURCE_URL = "{}/{}/{}".format(BLOG_URL, date_str, english_title)
-
-    articles = {
-        "articles": [
-            {
-                "title": TITLE,
-                "thumb_media_id": THUMB_MEDIA_ID,
-                "author": AUTHOR,
-                "digest": "",
-                "show_cover_pic": 1,
-                "content": RESULT,
-                "content_source_url": CONTENT_SOURCE_URL,
-                "need_open_comment": 1,
-                "only_fans_can_comment": 0,
-            }
-            # 若新增的是多图文素材，则此处应有几段articles结构，最多8段
-        ]
-    }
-
-    fp = open("./result.html", "w")
-    fp.write(RESULT)
-    fp.close()
-
-    existing_draft_id = get_draft_media_id(post_path)
-    if existing_draft_id:
-        print("Updating existing draft (media_id: {})".format(existing_draft_id))
-        article = articles["articles"][0]
-        resp = update_draft(existing_draft_id, article)
-        if resp is not None:
-            cache_update_with_draft(post_path, existing_draft_id)
-            return resp
-        else:
-            print("Update failed, creating new draft instead")
-
-    client = NewClient()
-    token = client.get_access_token()
-    headers = {"Content-type": "text/plain; charset=utf-8"}
-    datas = json.dumps(articles, ensure_ascii=False).encode("utf-8")
-
-    postUrl = "https://api.weixin.qq.com/cgi-bin/draft/add?access_token=%s" % token
-    r = requests.post(postUrl, data=datas, headers=headers)
-    resp = json.loads(r.text)
-    print(resp)
-    draft_media_id = resp["media_id"]
-    cache_update_with_draft(post_path, draft_media_id)
-    return resp
-
-
-def hexo_to_wechat(string_date):
-    pull_code()
-    pathlist = Path(HEXO_BLOG_POST_PATH).glob("**/*.md")
-    for path in pathlist:
-        # print('path', path)
-        path_str = str(path)
-        if file_processed(path_str):
-            print("{} has been processed".format(path_str))
-            continue
-        content = open(path_str, "r").read()
-        date = fetch_attr(content, "date").strip()
-        if string_date in date:
-            print("file date", date)
-            print("path_str", path_str)
-            news_json = upload_media_news(path_str)
-            print(news_json)
-            print("successful")
-
-
-if __name__ == "__main__":
-    init_cache()
-    start_time = time.time()  # 开始时间
-    times = [datetime.now(), datetime.now() - timedelta(days=7)]
-    for x in times:
-        print("start time: {}".format(x.strftime("%m/%d/%Y, %H:%M:%S")))
-        string_date = x.strftime("%Y-%m-%d")
-        hexo_to_wechat(string_date)
-    end_time = time.time()  # 结束时间
-    print("程序耗时%f秒." % (end_time - start_time))

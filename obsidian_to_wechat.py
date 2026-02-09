@@ -9,7 +9,6 @@ import requests
 
 from sync import (
     NewClient,
-    cache_update,
     cache_update_with_draft,
     fetch_attr,
     file_processed,
@@ -73,7 +72,7 @@ def upload_media_news(file_name, file_path, english_title):
     RESULT = render_markdown(content)
 
     digest = fetch_attr(content, "subtitle").strip().strip('"').strip("'")
-    print("digest", digest)
+    print("digest: {}".format(digest))
     print(fetch_attr(content, "date")[:10])
     CONTENT_SOURCE_URL = "https://depp.wang/2026/{}".format(english_title)
 
@@ -83,12 +82,12 @@ def upload_media_news(file_name, file_path, english_title):
                 "title": os.path.splitext(file_name)[0],
                 "thumb_media_id": THUMB_MEDIA_ID,
                 "author": AUTHOR,
-                "digest": "",
+                "digest": " ",
                 "show_cover_pic": 1,
                 "content": RESULT,
                 "content_source_url": CONTENT_SOURCE_URL,
                 "need_open_comment": 1,
-                "only_fans_can_comment": 0,
+                "only_fans_can_comment": 1,
             }
             # 若新增的是多图文素材，则此处应有几段articles结构，最多8段
         ]
