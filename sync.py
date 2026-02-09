@@ -7,6 +7,7 @@
 # from calendar import c
 from datetime import datetime
 from datetime import timedelta
+import re
 import subprocess
 
 # from weakref import ref
@@ -133,12 +134,8 @@ def replace_para(content):
 
 
 def replace_code(content):
-    res = []
-    for line in content.split("\n"):
-        if line.startswith("<code>"):
-            line = line.replace("<code>", gen_css("code"))
-        res.append(line)
-    return "\n".join(res)
+    content = content.replace("<code>", gen_css("code"))
+    return content
 
 
 def replace_header(content):
@@ -184,11 +181,6 @@ def replace_links(content):
 
 
 def format_fix(content):
-    # content = content.replace("<ul>\n<li>", "<ul><li>")
-    # content = content.replace("</li>\n</ul>", "</li></ul>")
-    # content = content.replace("<ol>\n<li>", "<ol><li>")
-    # content = content.replace("</li>\n</ol>", "</li></ol>")
-    content = content.replace("</li>", "</li>\n<p></p>")
     content = content.replace("background: #272822", gen_css("code"))
     content = content.replace(
         """<pre style="line-height: 125%">""",
@@ -204,13 +196,53 @@ def fix_image(content):
         link = """<img alt="{}" src="{}" />""".format(
             line.attr("alt"), line.attr("src")
         )
-        figure = gen_css("figure", link, line.attr("alt"))
+        img_tag = '<img src="{}" alt="{}" style="display: block; margin-top: 0px; margin-right: auto; margin-bottom: 0px; margin-left: auto; max-width: 100%; border-top-style: none; border-bottom-style: none; border-left-style: none; border-right-style: none; border-top-width: 3px; border-bottom-width: 3px; border-left-width: 3px; border-right-width: 3px; border-top-color: rgba(0, 0, 0, 0.4); border-bottom-color: rgba(0, 0, 0, 0.4); border-left-color: rgba(0, 0, 0, 0.4); border-right-color: rgba(0, 0, 0, 0.4); border-top-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px; border-bottom-left-radius: 0px; object-fit: fill; box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px;">'.format(
+            line.attr("src"), line.attr("alt") or ""
+        )
+        figure = gen_css("figure", img_tag, line.attr("alt") or "")
         content = content.replace(link, figure)
     return content
 
 
+def replace_strong(content):
+    strong_style = 'style="color: rgb(0, 0, 0); font-weight: bold; background-attachment: scroll; background-clip: border-box; background-color: rgba(0, 0, 0, 0); background-image: none; background-origin: padding-box; background-position-x: left; background-position-y: top; background-repeat: no-repeat; background-size: auto; width: auto; height: auto; margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; padding-top: 0px; padding-bottom: 0px; padding-left: 0px; padding-right: 0px; border-top-style: none; border-bottom-style: none; border-left-style: none; border-right-style: none; border-top-width: 3px; border-bottom-width: 3px; border-left-width: 3px; border-right-width: 3px; border-top-color: rgba(0, 0, 0, 0.4); border-bottom-color: rgba(0, 0, 0, 0.4); border-left-color: rgba(0, 0, 0, 0.4); border-right-color: rgba(0, 0, 0, 0.4); border-top-left-radius: 0px; border-top-right-radius: 0px; border-bottom-right-radius: 0px; border-bottom-left-radius: 0px;"'
+    content = content.replace("<strong>", "<strong {}>".format(strong_style))
+    return content
+
+
+def replace_list(content):
+    ul_style = 'style="list-style-type: disc; margin-top: 8px; margin-bottom: 8px; margin-left: 0px; margin-right: 0px; padding-top: 0px; padding-bottom: 0px; padding-left: 25px; padding-right: 0px; color: rgb(0, 0, 0);"'
+    ol_style = 'style="list-style-type: decimal; margin-top: 8px; margin-bottom: 8px; margin-left: 0px; margin-right: 0px; padding-top: 0px; padding-bottom: 0px; padding-left: 25px; padding-right: 0px; color: rgb(0, 0, 0);"'
+    li_section_style = 'style="margin-top: 5px; margin-bottom: 5px; color: rgb(1, 1, 1); font-size: 16px; line-height: 1.8em; letter-spacing: 0em; text-align: left; font-weight: normal;"'
+    content = content.replace("<ul>", "<ul {}>".format(ul_style))
+    content = content.replace("<ol>", "<ol {}>".format(ol_style))
+    content = content.replace("<li>", "<li><section {}>".format(li_section_style))
+    content = content.replace("</li>", "</section></li>")
+    # Compact list HTML: remove newlines between list elements
+    # WeChat's ProseMirror editor converts newlines into empty <li> items
+    content = content.replace("</li>\n<li>", "</li><li>")
+    content = re.sub(r'(<ul[^>]*>)\s*<li>', r'\1<li>', content)
+    content = re.sub(r'(<ol[^>]*>)\s*<li>', r'\1<li>', content)
+    content = content.replace("</li>\n</ul>", "</li></ul>")
+    content = content.replace("</li>\n</ol>", "</li></ol>")
+    return content
+
+
+def fix_figure_in_para(content):
+    """Remove <p> wrappers around <figure> elements.
+    Markdown renders images as <p><img/></p>, and after fix_image
+    this becomes <p><figure>...</figure></p>. A block <figure> inside
+    <p> is invalid HTML and breaks WeChat rendering."""
+    content = re.sub(
+        r'<p[^>]*>\s*(<figure[\s\S]*?</figure>)\s*</p>',
+        r'\1',
+        content
+    )
+    return content
+
+
 def gen_css(path, *args):
-    tmpl = open("./assets/{}.tmpl".format(path), "r").read()
+    tmpl = open("./assets/{}.tmpl".format(path), "r").read().strip()
     return tmpl.format(*args)
 
 
@@ -221,6 +253,9 @@ def css_beautify(content):
     content = replace_links(content)
     content = format_fix(content)
     content = fix_image(content)
+    content = fix_figure_in_para(content)
+    content = replace_strong(content)
+    content = replace_list(content)
     content = gen_css("header") + content + "</section>"
     return content
 

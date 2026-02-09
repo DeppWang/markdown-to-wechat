@@ -153,7 +153,7 @@ if __name__ == "__main__":
     init_cache()
     start_time = time.time()  # 开始时间
     print("start time: {}".format(datetime.now().strftime("%m/%d/%Y, %H:%M:%S")))
-    times = [datetime.now() - timedelta(days=i) for i in range(3, -1, -1)]
+    times = [datetime.now() - timedelta(days=i) for i in range(1, -1, -1)]
     for x in times:
         string_date = x.strftime("%Y-%m-%d")
         print("day: {}".format(string_date))
