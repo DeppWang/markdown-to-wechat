@@ -391,10 +391,12 @@ def upload_media_news(post_path):
                 "title": TITLE,
                 "thumb_media_id": THUMB_MEDIA_ID,
                 "author": AUTHOR,
-                "digest": digest,
+                "digest": "",
                 "show_cover_pic": 1,
                 "content": RESULT,
                 "content_source_url": CONTENT_SOURCE_URL,
+                "need_open_comment": 1,
+                "only_fans_can_comment": 0,
             }
             # 若新增的是多图文素材，则此处应有几段articles结构，最多8段
         ]
