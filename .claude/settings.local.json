@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(git commit:*)",
+      "WebSearch",
+      "WebFetch(domain:developers.weixin.qq.com)",
+      "Bash(git add:*)"
+    ]
+  }
+}
